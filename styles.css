@@ -11,9 +11,18 @@ body {
 }
 
 /* Estilização do Banner */
-.header img {
-    border-radius: 10px;
+.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+.header img {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px; /* Limita a altura máxima do banner */
+    border-radius: 10px;
 }
 
 /* Estilo para o container principal */
