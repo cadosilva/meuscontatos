@@ -22,7 +22,7 @@ body {
     max-width: 100%;
     height: auto;
     max-height: 300px; /* Limita a altura máxima do banner */
-    border-radius: 10px;
+    border-radius: 800px;
 }
 
 /* Estilo para o container principal */
