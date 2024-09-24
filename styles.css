@@ -54,14 +54,14 @@ body {
 
 /* Estilização do QR Code */
 .qr-code {
-    margin-top: 30px;
+    margin-top: 70px;
 }
 
 .qr-code img {
     max-width: 300px; /* Ajuste o tamanho conforme necessário */
     height: auto;
-    border-radius: 10px;
-    margin-bottom: 10px;
+    border-radius: 30px;
+    margin-bottom: 30px;
 }
 
 .qr-code p {
