@@ -1,11 +1,11 @@
- Estilização do Papel de Parede 
+/* Estilização do Papel de Parede */
 body {
     font-family: Arial, sans-serif;
     background-image: url('wallpaper.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: #fff; /* Mude a cor do texto para branco para contraste */
+    color: #fff;
     margin: 0;
     padding: 0;
 }
@@ -28,7 +28,7 @@ body {
 /* Estilo para o container principal */
 .container {
     text-align: center;
-    background: rgba(0, 0, 0, 0.7); /* Fundo semitransparente para destacar o texto */
+    background: rgba(0, 0, 0, 0.7);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -50,4 +50,21 @@ body {
 .links a:hover {
     background-color: #0056b3;
     transform: scale(1.05);
+}
+
+/* Estilização do QR Code */
+.qr-code {
+    margin-top: 30px;
+}
+
+.qr-code img {
+    max-width: 150px; /* Ajuste o tamanho conforme necessário */
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.qr-code p {
+    font-size: 16px;
+    color: #fff;
 }
