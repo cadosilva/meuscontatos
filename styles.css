@@ -58,8 +58,8 @@ body {
 }
 
 .qr-code img {
-    width: 80px; /* Define a largura exata */
-    height: 60px; /* Define a altura exata */
+    width: 162px; /* Define a largura exata */
+    height: 167px; /* Define a altura exata */
     border-radius: 10px;
     margin-bottom: 10px;
 }
