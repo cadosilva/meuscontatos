@@ -89,7 +89,8 @@
             <p id="gameMessage">Você encontrou um inimigo! Escolha uma ação:</p>
             <button onclick="attack()">Atacar</button>
             <button onclick="useAbility()">Usar Habilidade</button>
-            <button onclick="defend()">Defender</button>
+            <button onclick="useHealthPotion()">Usar Poção de Cura</button>
+            <button onclick="useMana()">Usar Mana</button>
             <button onclick="run()">Fugir</button>
             <button onclick="goToCity()">Ir para a Cidade</button>
         </div>
@@ -377,6 +378,30 @@
                     }
                 } else {
                     document.getElementById('gameMessage').innerText = "Mana insuficiente para usar a habilidade especial!";
+                }
+                updateStatus();
+            }
+
+            // Usar Poção de Cura
+            function useHealthPotion() {
+                const potionIndex = currentPlayerData.inventory.indexOf("Poção de Cura");
+                if (potionIndex > -1) {
+                    currentPlayerData.health += 30; // Restaura 30 de vida
+                    currentPlayerData.inventory.splice(potionIndex, 1); // Remove a poção do inventário
+                    document.getElementById('gameMessage').innerText = "Você usou uma Poção de Cura e restaurou 30 de vida!";
+                } else {
+                    document.getElementById('gameMessage').innerText = "Você não tem Poção de Cura no inventário!";
+                }
+                updateStatus();
+            }
+
+            // Usar Mana
+            function useMana() {
+                if (currentPlayerData.mana >= MANA_COST) {
+                    currentPlayerData.mana -= MANA_COST;
+                    document.getElementById('gameMessage').innerText = "Você usou mana para realizar uma ação especial!";
+                } else {
+                    document.getElementById('gameMessage').innerText = "Mana insuficiente para usar!";
                 }
                 updateStatus();
             }
