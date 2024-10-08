@@ -20,11 +20,6 @@
             <!-- Links para redes sociais -->
         </div>
 
-        <div class="qr-code">
-            <img src="whatsapp-qr.jpeg" alt="QR Code do WhatsApp">
-            <p>Escaneie esse código para me adicionar no WhatsApp!</p>
-        </div>
-
         <div class="login">
             <h2>Login ou Criação de Conta</h2>
             <label for="nickname">Nickname: </label>
@@ -272,8 +267,9 @@
                 const playerDamage = Math.floor(Math.random() * 20) + 1;
                 const enemyDamage = Math.floor(Math.random() * 15) + 1;
 
-                currentPlayerData.health -= enemyDamage;
+                // Diminui a vida do inimigo
                 enemyHealth -= playerDamage;
+                currentPlayerData.health -= enemyDamage;
 
                 if (enemyHealth <= 0) {
                     gainXP(50);
