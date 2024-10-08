@@ -45,12 +45,15 @@
 
         <div class="map-selection" style="display: none;">
             <h2>Escolha um Mapa</h2>
-            <select id="map">
+            <select id="map" onchange="updateMapImage()">
                 <option value="floresta">Floresta (Níveis 1 a 10)</option>
                 <option value="deserto">Deserto (Níveis 20 a 30)</option>
                 <option value="continenteGelo">Continente de Gelo (Níveis 30 a 40)</option>
                 <option value="ilhaLava">Ilha de Lava (Níveis 50 a 60)</option>
             </select>
+            <div id="mapImageContainer">
+                <img id="mapImage" src="" alt="Imagem do Mapa" style="display:none; width: 300px; height: auto;">
+            </div>
             <button onclick="startAdventure()">Explorar Mapa</button>
         </div>
 
@@ -73,6 +76,7 @@
             <p>Nome: <span id="bossName">Lord Orc</span></p>
             <p>Status: <span id="bossStatus">Vivo</span></p>
             <p>Tempo Morto: <span id="bossTimeDead">0 segundos</span></p>
+            <img id="bossImage" src="boss_orc.jpg" alt="Imagem do Boss" style="width: 300px; height: auto;">
             <button onclick="respawnSecondaryBoss()">Renascer Boss Secundário</button>
         </div>
 
@@ -324,6 +328,36 @@
                 document.getElementById('cityInventory').innerText = currentPlayerData.inventory.length > 0 ? currentPlayerData.inventory.join(', ') : 'Nada'; // Atualiza o inventário na loja
                 document.getElementById('playerLevel').innerText = currentPlayerData.level; // Atualiza o nível do jogador
                 savePlayerData();  // Salvar dados após cada atualização
+            }
+
+            // Atualiza a imagem do mapa com base na seleção
+            function updateMapImage() {
+                const mapSelect = document.getElementById('map');
+                const mapImage = document.getElementById('mapImage');
+
+                switch (mapSelect.value) {
+                    case 'floresta':
+                        mapImage.src = 'floresta.jpg'; // Caminho da imagem da floresta
+                        break;
+                    case 'deserto':
+                        mapImage.src = 'deserto.jpg'; // Caminho da imagem do deserto
+                        break;
+                    case 'continenteGelo':
+                        mapImage.src = 'continente_gelo.jpg'; // Caminho da imagem do continente de gelo
+                        break;
+                    case 'ilhaLava':
+                        mapImage.src = 'ilha_lava.jpg'; // Caminho da imagem da ilha de lava
+                        break;
+                    default:
+                        mapImage.src = ''; // Se não for um mapa válido
+                }
+
+                // Mostra a imagem se houver uma
+                if (mapImage.src) {
+                    mapImage.style.display = 'block';
+                } else {
+                    mapImage.style.display = 'none';
+                }
             }
 
             // Salvar dados no LocalStorage
