@@ -44,6 +44,12 @@
             <p>Escaneie esse código para me adicionar no WhatsApp!</p>
         </div>
 
+        <!-- Ranking de Jogadores -->
+        <div class="ranking">
+            <h2>Ranking dos 5 Melhores Jogadores</h2>
+            <ul id="rankingList"></ul>
+        </div>
+
         <!-- Seleção de Nickname e Classe -->
         <div class="start-game">
             <h2>Escolha seu Nickname e Classe</h2>
@@ -97,8 +103,6 @@
             let inventory = [];
             let playerClass = '';
             let playerNickname = '';
-            let bossDefeated = false;
-            let lastBossDefeatTime = null;
 
             const MAX_LEVEL = 50;
 
@@ -129,6 +133,7 @@
                 document.querySelector('.game').style.display = 'block';
 
                 updateStatus();
+                loadPlayerData();  // Carrega os dados do jogador do LocalStorage
             }
 
             function updateStatus() {
@@ -137,6 +142,53 @@
                 document.getElementById('playerXP').innerText = playerXP;
                 document.getElementById('playerGold').innerText = playerGold;
                 document.getElementById('inventory').innerText = inventory.length > 0 ? inventory.join(', ') : 'Nada';
+                savePlayerData();  // Salva os dados automaticamente após cada ação
+            }
+
+            function savePlayerData() {
+                const playerData = {
+                    nickname: playerNickname,
+                    level: playerLevel,
+                    xp: playerXP,
+                    gold: playerGold,
+                    class: playerClass,
+                    inventory: inventory,
+                };
+                localStorage.setItem(playerNickname, JSON.stringify(playerData));
+                updateRanking();  // Atualiza o ranking após cada atualização
+            }
+
+            function loadPlayerData() {
+                const savedData = localStorage.getItem(playerNickname);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    playerLevel = data.level;
+                    playerXP = data.xp;
+                    playerGold = data.gold;
+                    playerClass = data.class;
+                    inventory = data.inventory;
+                    updateStatus();  // Atualiza o status com os dados carregados
+                }
+            }
+
+            function updateRanking() {
+                const rankingData = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const playerData = JSON.parse(localStorage.getItem(key));
+                    rankingData.push(playerData);
+                }
+
+                // Ordenar os jogadores pelo nível
+                rankingData.sort((a, b) => b.level - a.level);
+
+                // Exibir os 5 melhores jogadores no ranking
+                const rankingList = document.getElementById('rankingList');
+                rankingList.innerHTML = '';
+                for (let i = 0; i < Math.min(5, rankingData.length); i++) {
+                    const player = rankingData[i];
+                    rankingList.innerHTML += `<li>${player.nickname} - Nível: ${player.level}</li>`;
+                }
             }
 
             function attack() {
@@ -146,20 +198,10 @@
                 enemyHealth -= playerDamage;
                 playerHealth -= enemyDamage;
 
-                if (playerHealth < 30) {
-                    if (inventory.includes("Poção de Cura")) {
-                        useHealingPotion();
-                    } else {
-                        alert("Você está com pouca vida e não tem poções. Vá para a cidade comprar mais!");
-                        return;
-                    }
-                }
-
                 if (enemyHealth <= 0) {
                     gainXP(50);
                     playerGold += 20;
-                    inventory.push("Poção de Cura");
-                    document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Você ganhou 50 XP, 20 de ouro e uma Poção de Cura.";
+                    document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Ganhou 50 XP e 20 de ouro.";
                     resetEnemy();
                 } else if (playerHealth <= 0) {
                     playerDeath();
@@ -179,12 +221,6 @@
                         document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${playerLevel}!`;
                     }
                 }
-            }
-
-            function useHealingPotion() {
-                playerHealth += 20;
-                inventory.splice(inventory.indexOf("Poção de Cura"), 1);
-                document.getElementById('gameMessage').innerText = "Você usou uma Poção de Cura e recuperou 20 de vida!";
                 updateStatus();
             }
 
@@ -222,6 +258,9 @@
                 enemyHealth = 100;
                 updateStatus();
             }
+
+            // Carregar o ranking na inicialização
+            window.onload = updateRanking;
         </script>
     </body>
 </html>
