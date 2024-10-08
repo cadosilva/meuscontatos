@@ -51,9 +51,7 @@
                 <option value="continenteGelo">Continente de Gelo (Níveis 30 a 40)</option>
                 <option value="ilhaLava">Ilha de Lava (Níveis 50 a 60)</option>
             </select>
-            <div id="mapImageContainer">
-                <img id="mapImage" src="" alt="Imagem do Mapa" style="display:none; width: 300px; height: auto;">
-            </div>
+            <img id="mapImage" src="" alt="Imagem do Mapa" style="width: 100%; height: auto; display: none;">
             <button onclick="startAdventure()">Explorar Mapa</button>
         </div>
 
@@ -62,7 +60,6 @@
             <ul id="rankingList"></ul>
         </div>
 
-        <!-- Nova Seção para Gerenciar Jogadores -->
         <div class="manage-players">
             <h2>Gerenciar Jogadores</h2>
             <button onclick="managePlayers()">Gerenciar Jogadores</button>
@@ -70,13 +67,11 @@
             <button onclick="listAllPlayers()">Atualizar Lista</button>
         </div>
 
-        <!-- Informações do Boss -->
         <div class="boss-info">
             <h2>Informações do Boss</h2>
             <p>Nome: <span id="bossName">Lord Orc</span></p>
             <p>Status: <span id="bossStatus">Vivo</span></p>
             <p>Tempo Morto: <span id="bossTimeDead">0 segundos</span></p>
-            <img id="bossImage" src="boss_orc.jpg" alt="Imagem do Boss" style="width: 300px; height: auto;">
             <button onclick="respawnSecondaryBoss()">Renascer Boss Secundário</button>
         </div>
 
@@ -127,6 +122,8 @@
             let currentMap = '';
             let enemyLevel = 0;
             let enemyName = '';
+            let respawnTimer;
+            let isDead = false;
 
             const MAX_LEVEL = 50;
             const MANA_COST = 20; // Mana necessária para usar habilidades especiais
@@ -148,6 +145,25 @@
                 if (Notification.permission === 'granted') {
                     new Notification(title, { body: message });
                 }
+            }
+
+            // Atualiza a imagem do mapa selecionado
+            function updateMapImage() {
+                const mapSelect = document.getElementById('map');
+                const selectedMap = mapSelect.value;
+                const mapImage = document.getElementById('mapImage');
+
+                if (selectedMap === 'floresta') {
+                    mapImage.src = 'floresta.jpg'; // Adicione o caminho correto da imagem da floresta
+                } else if (selectedMap === 'deserto') {
+                    mapImage.src = 'deserto.jpg'; // Adicione o caminho correto da imagem do deserto
+                } else if (selectedMap === 'continenteGelo') {
+                    mapImage.src = 'gelo.jpg'; // Adicione o caminho correto da imagem do continente de gelo
+                } else if (selectedMap === 'ilhaLava') {
+                    mapImage.src = 'lava.jpg'; // Adicione o caminho correto da imagem da ilha de lava
+                }
+
+                mapImage.style.display = 'block'; // Exibe a imagem
             }
 
             // Respawn do boss
@@ -330,36 +346,6 @@
                 savePlayerData();  // Salvar dados após cada atualização
             }
 
-            // Atualiza a imagem do mapa com base na seleção
-            function updateMapImage() {
-                const mapSelect = document.getElementById('map');
-                const mapImage = document.getElementById('mapImage');
-
-                switch (mapSelect.value) {
-                    case 'floresta':
-                        mapImage.src = 'floresta.jpg'; // Caminho da imagem da floresta
-                        break;
-                    case 'deserto':
-                        mapImage.src = 'deserto.jpg'; // Caminho da imagem do deserto
-                        break;
-                    case 'continenteGelo':
-                        mapImage.src = 'continente_gelo.jpg'; // Caminho da imagem do continente de gelo
-                        break;
-                    case 'ilhaLava':
-                        mapImage.src = 'ilha_lava.jpg'; // Caminho da imagem da ilha de lava
-                        break;
-                    default:
-                        mapImage.src = ''; // Se não for um mapa válido
-                }
-
-                // Mostra a imagem se houver uma
-                if (mapImage.src) {
-                    mapImage.style.display = 'block';
-                } else {
-                    mapImage.style.display = 'none';
-                }
-            }
-
             // Salvar dados no LocalStorage
             function savePlayerData() {
                 localStorage.setItem(playerNickname, JSON.stringify(currentPlayerData));
@@ -381,20 +367,24 @@
 
             // Atacar
             function attack() {
-                const playerDamage = Math.floor(Math.random() * 20) + 1;
-                const enemyDamage = Math.floor(Math.random() * 15) + 1;
+                const playerDamage = Math.floor(Math.random() * (10 + playerLevel)) + 1; // Ajuste no dano do jogador
+                const enemyDamage = Math.floor(Math.random() * (5 + enemyLevel)) + 1; // Ajuste no dano do inimigo
 
                 // Diminui a vida do inimigo
                 enemyHealth -= playerDamage;
                 currentPlayerData.health -= enemyDamage;
+
+                // Verifica se a vida do jogador é negativa
+                if (currentPlayerData.health < 0) {
+                    currentPlayerData.health = 0; // Define vida do jogador como 0 se for negativa
+                    playerDeath(); // Chama função de morte
+                }
 
                 if (enemyHealth <= 0) {
                     gainXP(50);
                     currentPlayerData.gold += 20;
                     document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Ganhou 50 XP e 20 de ouro.";
                     resetEnemy();
-                } else if (currentPlayerData.health <= 0) {
-                    playerDeath();
                 } else {
                     document.getElementById('gameMessage').innerText = `Você causou ${playerDamage} de dano! O inimigo causou ${enemyDamage} de dano em você!`;
                 }
@@ -406,7 +396,7 @@
             function useAbility() {
                 if (currentPlayerData.mana >= MANA_COST) {
                     currentPlayerData.mana -= MANA_COST;
-                    const specialDamage = Math.floor(Math.random() * 50) + 10;
+                    const specialDamage = Math.floor(Math.random() * (50 + playerLevel)) + 10; // Ajuste no dano da habilidade especial
                     enemyHealth -= specialDamage;
                     document.getElementById('gameMessage').innerText = `Você usou uma habilidade especial e causou ${specialDamage} de dano!`;
                     
@@ -463,9 +453,22 @@
 
             // Morte do jogador
             function playerDeath() {
-                currentPlayerData.xp = Math.floor(currentPlayerData.xp * 0.8);
+                isDead = true;
                 document.getElementById('gameMessage').innerText = "Você morreu e perdeu 20% de sua experiência.";
                 resetEnemy();
+                setTimeout(() => {
+                    respawnPlayer(); // Chama a função de respawn após 5 minutos
+                }, 300000); // 5 minutos em milissegundos
+            }
+
+            // Respawn do jogador
+            function respawnPlayer() {
+                currentPlayerData.health = 100; // Restaura a saúde
+                currentPlayerData.mana = 100; // Restaura a mana
+                currentPlayerData.xp = 0; // Reseta a experiência
+                isDead = false;
+                alert("Você renasceu! Todos os seus status foram restaurados.");
+                updateStatus(); // Atualiza status após renascer
             }
 
             // Ir para a cidade
