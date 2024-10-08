@@ -1,0 +1,6 @@
+nickname,password,level,xp,gold,class,health,mana
+Jogador1,senha123,1,0,50,guerreiro,100,100
+Jogador2,senha456,1,0,50,mago,80,150
+Jogador3,senha789,2,120,70,arqueiro,90,100
+Jogador4,senha101,3,200,100,guerreiro,120,80
+Jogador5,senha112,1,50,40,mago,70,130
