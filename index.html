@@ -397,11 +397,11 @@
 
             // Usar Mana
             function useMana() {
-                if (currentPlayerData.mana >= MANA_COST) {
-                    currentPlayerData.mana -= MANA_COST;
-                    document.getElementById('gameMessage').innerText = "Você usou mana para realizar uma ação especial!";
+                if (currentPlayerData.mana < 100) {
+                    currentPlayerData.mana += 30; // Restaura 30 de mana
+                    document.getElementById('gameMessage').innerText = "Você usou mana e recuperou 30 de mana!";
                 } else {
-                    document.getElementById('gameMessage').innerText = "Mana insuficiente para usar!";
+                    document.getElementById('gameMessage').innerText = "Mana já está cheia!";
                 }
                 updateStatus();
             }
