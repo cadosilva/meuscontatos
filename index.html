@@ -316,6 +316,8 @@
                     if (currentPlayerData.xp >= playerLevel * 100) {
                         currentPlayerData.xp = 0;
                         currentPlayerData.level++;
+                        currentPlayerData.health = 100; // Restaura vida ao subir de nível
+                        currentPlayerData.mana = 100;   // Restaura mana ao subir de nível
                         document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${playerLevel}!`;
                     }
                 }
@@ -394,10 +396,10 @@
             function editPlayer(nickname) {
                 const inputPassword = prompt("Digite a senha de administrador:");
                 if (inputPassword === adminPassword) {
-                    const newLevel = prompt("Novo nível para o jogador " + nickname + ":");
-                    if (newLevel !== null) {
+                    const newGold = prompt("Novo ouro para o jogador " + nickname + ":");
+                    if (newGold !== null) {
                         const playerData = JSON.parse(localStorage.getItem(nickname));
-                        playerData.level = parseInt(newLevel);
+                        playerData.gold = parseInt(newGold);
                         localStorage.setItem(nickname, JSON.stringify(playerData));
                         alert("Dados do jogador " + nickname + " atualizados!");
                         listAllPlayers(); // Atualiza a lista após editar
