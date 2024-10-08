@@ -126,6 +126,7 @@
                 const savedData = localStorage.getItem(playerNickname);
 
                 if (savedData) {
+                    // Se os dados do jogador existirem, verificamos a senha para login
                     const data = JSON.parse(savedData);
                     if (data.password === playerPassword) {
                         currentPlayerData = data;
@@ -136,7 +137,7 @@
                         alert('Senha incorreta!');
                     }
                 } else {
-                    // Criar nova conta
+                    // Se os dados não existirem, criamos uma nova conta
                     currentPlayerData = {
                         nickname: playerNickname,
                         password: playerPassword,
