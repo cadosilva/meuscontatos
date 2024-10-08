@@ -44,25 +44,27 @@
             <p>Escaneie esse código para me adicionar no WhatsApp!</p>
         </div>
 
-        <!-- Ranking de Jogadores -->
-        <div class="ranking">
-            <h2>Ranking dos 5 Melhores Jogadores</h2>
-            <ul id="rankingList"></ul>
+        <!-- Login Interno -->
+        <div class="login">
+            <h2>Login para continuar o progresso</h2>
+            <label for="nickname">Nickname: </label>
+            <input type="text" id="loginNickname" placeholder="Digite seu nickname">
+            
+            <label for="password">Senha: </label>
+            <input type="password" id="loginPassword" placeholder="Digite sua senha">
+            
+            <button onclick="login()">Login / Criar Conta</button>
         </div>
 
-        <!-- Seleção de Nickname e Classe -->
-        <div class="start-game">
-            <h2>Escolha seu Nickname e Classe</h2>
-            <label for="nickname">Nickname: </label>
-            <input type="text" id="nickname" placeholder="Digite seu nickname">
-            
+        <!-- Seleção de Classe -->
+        <div class="start-game" style="display: none;">
+            <h2>Escolha sua Classe</h2>
             <label for="class">Classe: </label>
             <select id="class">
                 <option value="guerreiro">Guerreiro</option>
                 <option value="mago">Mago</option>
                 <option value="arqueiro">Arqueiro</option>
             </select>
-            
             <button onclick="startGame()">Iniciar Jogo</button>
         </div>
 
@@ -71,7 +73,7 @@
             <h2 id="playerNameTitle"></h2>
             <div class="status">
                 <p><strong>Classe: <span id="playerClass"></span></strong></p>
-                <p><strong>Vida:</strong> <span id="playerHealth">100</span> | XP: <span id="playerXP">0</span> | Ouro: <span id="playerGold">0</span></p>
+                <p><strong>Vida:</strong> <span id="playerHealth">100</span> | Mana: <span id="playerMana">100</span> | XP: <span id="playerXP">0</span> | Ouro: <span id="playerGold">0</span></p>
                 <p><strong>Inimigo</strong> - Vida: <span id="enemyHealth">100</span></p>
             </div>
             <div class="inventory">
@@ -91,11 +93,13 @@
             <p>Você pode comprar itens para se fortalecer.</p>
             <button onclick="buyItem('poção')">Comprar Poção de Cura (20 Ouro)</button>
             <button onclick="buyItem('espada')">Comprar Espada Melhorada (50 Ouro)</button>
+            <button onclick="buyItem('mana')">Comprar Poção de Mana (20 Ouro)</button>
             <button onclick="leaveCity()">Sair da Cidade</button>
         </div>
 
         <script>
             let playerHealth = 100;
+            let playerMana = 100;
             let enemyHealth = 100;
             let playerXP = 0;
             let playerGold = 0;
@@ -103,107 +107,112 @@
             let inventory = [];
             let playerClass = '';
             let playerNickname = '';
+            let playerPassword = '';
+            let currentPlayerData = null;
 
             const MAX_LEVEL = 50;
+            const MANA_COST = 20; // Mana necessária para usar habilidades especiais
 
-            function startGame() {
-                playerNickname = document.getElementById('nickname').value;
-                playerClass = document.getElementById('class').value;
+            // Login / Criar conta
+            function login() {
+                playerNickname = document.getElementById('loginNickname').value;
+                playerPassword = document.getElementById('loginPassword').value;
 
-                if (!playerNickname) {
-                    alert('Por favor, digite um nickname.');
+                if (!playerNickname || !playerPassword) {
+                    alert('Por favor, insira seu nickname e senha.');
                     return;
                 }
 
-                if (playerClass === 'guerreiro') {
-                    playerHealth = 120;
-                    playerGold = 10;
-                } else if (playerClass === 'mago') {
-                    playerHealth = 80;
-                    playerGold = 15;
-                } else if (playerClass === 'arqueiro') {
-                    playerHealth = 100;
-                    playerGold = 12;
+                const savedData = localStorage.getItem(playerNickname);
+
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    if (data.password === playerPassword) {
+                        currentPlayerData = data;
+                        loadPlayerData();  // Carrega os dados do jogador
+                        document.querySelector('.login').style.display = 'none';
+                        document.querySelector('.game').style.display = 'block';
+                    } else {
+                        alert('Senha incorreta!');
+                    }
+                } else {
+                    // Criar nova conta
+                    currentPlayerData = {
+                        nickname: playerNickname,
+                        password: playerPassword,
+                        level: 1,
+                        xp: 0,
+                        gold: 50,  // Adicionando 50 de ouro inicial
+                        class: '',
+                        health: 100,
+                        mana: 100,
+                        inventory: []
+                    };
+                    localStorage.setItem(playerNickname, JSON.stringify(currentPlayerData));
+                    document.querySelector('.login').style.display = 'none';
+                    document.querySelector('.start-game').style.display = 'block';
                 }
+            }
+
+            // Iniciar o jogo (após selecionar a classe)
+            function startGame() {
+                playerClass = document.getElementById('class').value;
+                currentPlayerData.class = playerClass;
+                currentPlayerData.health = playerClass === 'guerreiro' ? 120 : playerClass === 'mago' ? 80 : 100;
+                currentPlayerData.mana = playerClass === 'mago' ? 150 : 100; // Magos têm mais mana
+                savePlayerData();
 
                 document.getElementById('playerNameTitle').innerText = `Jogador: ${playerNickname}`;
                 document.getElementById('playerClass').innerText = playerClass;
-
                 document.querySelector('.start-game').style.display = 'none';
                 document.querySelector('.game').style.display = 'block';
 
                 updateStatus();
-                loadPlayerData();  // Carrega os dados do jogador do LocalStorage
             }
 
+            // Atualizar status
             function updateStatus() {
-                document.getElementById('playerHealth').innerText = playerHealth > 0 ? playerHealth : 0;
-                document.getElementById('enemyHealth').innerText = enemyHealth > 0 ? enemyHealth : 0;
-                document.getElementById('playerXP').innerText = playerXP;
-                document.getElementById('playerGold').innerText = playerGold;
-                document.getElementById('inventory').innerText = inventory.length > 0 ? inventory.join(', ') : 'Nada';
-                savePlayerData();  // Salva os dados automaticamente após cada ação
+                document.getElementById('playerHealth').innerText = currentPlayerData.health;
+                document.getElementById('playerMana').innerText = currentPlayerData.mana;
+                document.getElementById('playerXP').innerText = currentPlayerData.xp;
+                document.getElementById('playerGold').innerText = currentPlayerData.gold;
+                document.getElementById('inventory').innerText = currentPlayerData.inventory.length > 0 ? currentPlayerData.inventory.join(', ') : 'Nada';
+                savePlayerData();  // Salvar dados após cada atualização
             }
 
+            // Salvar dados no LocalStorage
             function savePlayerData() {
-                const playerData = {
-                    nickname: playerNickname,
-                    level: playerLevel,
-                    xp: playerXP,
-                    gold: playerGold,
-                    class: playerClass,
-                    inventory: inventory,
-                };
-                localStorage.setItem(playerNickname, JSON.stringify(playerData));
-                updateRanking();  // Atualiza o ranking após cada atualização
+                localStorage.setItem(playerNickname, JSON.stringify(currentPlayerData));
             }
 
+            // Carregar dados do jogador
             function loadPlayerData() {
-                const savedData = localStorage.getItem(playerNickname);
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    playerLevel = data.level;
-                    playerXP = data.xp;
-                    playerGold = data.gold;
-                    playerClass = data.class;
-                    inventory = data.inventory;
-                    updateStatus();  // Atualiza o status com os dados carregados
+                if (currentPlayerData) {
+                    playerClass = currentPlayerData.class;
+                    playerHealth = currentPlayerData.health;
+                    playerMana = currentPlayerData.mana;
+                    playerXP = currentPlayerData.xp;
+                    playerGold = currentPlayerData.gold;
+                    inventory = currentPlayerData.inventory;
+                    document.getElementById('playerNameTitle').innerText = `Jogador: ${currentPlayerData.nickname}`;
+                    updateStatus();
                 }
             }
 
-            function updateRanking() {
-                const rankingData = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    const playerData = JSON.parse(localStorage.getItem(key));
-                    rankingData.push(playerData);
-                }
-
-                // Ordenar os jogadores pelo nível
-                rankingData.sort((a, b) => b.level - a.level);
-
-                // Exibir os 5 melhores jogadores no ranking
-                const rankingList = document.getElementById('rankingList');
-                rankingList.innerHTML = '';
-                for (let i = 0; i < Math.min(5, rankingData.length); i++) {
-                    const player = rankingData[i];
-                    rankingList.innerHTML += `<li>${player.nickname} - Nível: ${player.level}</li>`;
-                }
-            }
-
+            // Atacar
             function attack() {
                 const playerDamage = Math.floor(Math.random() * 20) + 1;
                 const enemyDamage = Math.floor(Math.random() * 15) + 1;
 
+                currentPlayerData.health -= enemyDamage;
                 enemyHealth -= playerDamage;
-                playerHealth -= enemyDamage;
 
                 if (enemyHealth <= 0) {
                     gainXP(50);
-                    playerGold += 20;
+                    currentPlayerData.gold += 20;
                     document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Ganhou 50 XP e 20 de ouro.";
                     resetEnemy();
-                } else if (playerHealth <= 0) {
+                } else if (currentPlayerData.health <= 0) {
                     playerDeath();
                 } else {
                     document.getElementById('gameMessage').innerText = `Você causou ${playerDamage} de dano! O inimigo causou ${enemyDamage} de dano em você!`;
@@ -212,55 +221,82 @@
                 updateStatus();
             }
 
+            // Usar habilidade especial
+            function useAbility() {
+                if (currentPlayerData.mana >= MANA_COST) {
+                    currentPlayerData.mana -= MANA_COST;
+                    const specialDamage = Math.floor(Math.random() * 50) + 10;
+                    enemyHealth -= specialDamage;
+                    document.getElementById('gameMessage').innerText = `Você usou uma habilidade especial e causou ${specialDamage} de dano!`;
+                    
+                    if (enemyHealth <= 0) {
+                        gainXP(50);
+                        currentPlayerData.gold += 20;
+                        document.getElementById('gameMessage').innerText += " Você derrotou o inimigo!";
+                        resetEnemy();
+                    }
+                } else {
+                    document.getElementById('gameMessage').innerText = "Mana insuficiente para usar a habilidade especial!";
+                }
+                updateStatus();
+            }
+
+            // Ganhar XP
             function gainXP(amount) {
                 if (playerLevel < MAX_LEVEL) {
-                    playerXP += amount;
-                    if (playerXP >= playerLevel * 100) {
-                        playerXP = 0;
-                        playerLevel++;
+                    currentPlayerData.xp += amount;
+                    if (currentPlayerData.xp >= playerLevel * 100) {
+                        currentPlayerData.xp = 0;
+                        currentPlayerData.level++;
                         document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${playerLevel}!`;
                     }
                 }
                 updateStatus();
             }
 
+            // Morte do jogador
             function playerDeath() {
-                playerXP = Math.floor(playerXP * 0.8);
+                currentPlayerData.xp = Math.floor(currentPlayerData.xp * 0.8);
                 document.getElementById('gameMessage').innerText = "Você morreu e perdeu 20% de sua experiência.";
                 resetEnemy();
             }
 
+            // Ir para a cidade
             function goToCity() {
                 document.querySelector('.game').style.display = 'none';
                 document.querySelector('.city').style.display = 'block';
             }
 
+            // Comprar itens na cidade
             function buyItem(item) {
-                if (item === 'poção' && playerGold >= 20) {
-                    playerGold -= 20;
-                    inventory.push("Poção de Cura");
+                if (item === 'poção' && currentPlayerData.gold >= 20) {
+                    currentPlayerData.gold -= 20;
+                    currentPlayerData.inventory.push("Poção de Cura");
                     document.getElementById('gameMessage').innerText = "Você comprou uma Poção de Cura!";
-                } else if (item === 'espada' && playerGold >= 50) {
-                    playerGold -= 50;
+                } else if (item === 'espada' && currentPlayerData.gold >= 50) {
+                    currentPlayerData.gold -= 50;
                     document.getElementById('gameMessage').innerText = "Você comprou uma Espada Melhorada!";
+                } else if (item === 'mana' && currentPlayerData.gold >= 20) {
+                    currentPlayerData.gold -= 20;
+                    currentPlayerData.inventory.push("Poção de Mana");
+                    document.getElementById('gameMessage').innerText = "Você comprou uma Poção de Mana!";
                 } else {
                     document.getElementById('gameMessage').innerText = "Ouro insuficiente!";
                 }
                 updateStatus();
             }
 
+            // Sair da cidade
             function leaveCity() {
                 document.querySelector('.city').style.display = 'none';
                 document.querySelector('.game').style.display = 'block';
             }
 
+            // Resetar inimigo
             function resetEnemy() {
                 enemyHealth = 100;
                 updateStatus();
             }
-
-            // Carregar o ranking na inicialização
-            window.onload = updateRanking;
         </script>
     </body>
 </html>
