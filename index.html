@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Redes Sociais - Jogo Melhorado versao teste 1.0  </title>
+    <title>Minhas Redes Sociais - Jogo Melhorado versão teste 1.0</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">  
 </head>
 <body>
     <div class="header">
@@ -53,6 +53,22 @@
             <ul id="rankingList"></ul>
         </div>
 
+        <!-- Nova Seção para Gerenciar Jogadores -->
+        <div class="manage-players">
+            <h2>Gerenciar Jogadores</h2>
+            <button onclick="managePlayers()">Gerenciar Jogadores</button>
+            <ul id="playerList"></ul>
+            <button onclick="listAllPlayers()">Atualizar Lista</button>
+        </div>
+
+        <!-- Informações do Boss -->
+        <div class="boss-info">
+            <h2>Informações do Boss</h2>
+            <p>Nome: <span id="bossName">Lord Orc</span></p>
+            <p>Status: <span id="bossStatus">Vivo</span></p>
+            <p>Tempo Morto: <span id="bossTimeDead">0 segundos</span></p>
+        </div>
+
         <div class="game" style="display: none;">
             <h2 id="playerNameTitle"></h2>
             <div class="status">
@@ -95,6 +111,13 @@
 
             const MAX_LEVEL = 50;
             const MANA_COST = 20; // Mana necessária para usar habilidades especiais
+            const adminPassword = 'Cadosilva102030@jogosite'; // Senha do administrador
+
+            // Informações do Boss
+            let bossName = "Lord Orc";
+            let bossStatus = "Vivo"; // Status inicial do boss
+            let bossDeathTime = 0; // Tempo em segundos que o boss está morto
+            let bossDeathTimer; // Timer para atualizar o tempo de morte
 
             // Solicitar permissão para notificações ao carregar o jogo
             if (Notification.permission !== 'granted') {
@@ -110,8 +133,19 @@
 
             // Respawn do boss
             function respawnBoss() {
-                // Lógica para respawn do boss...
-                sendNotification('Boss Respawned!', 'Um novo boss apareceu. Prepare-se para enfrentá-lo!');
+                if (bossStatus === "Morto") {
+                    bossStatus = "Vivo";
+                    bossDeathTime = 0; // Reseta o tempo de morte
+                    clearInterval(bossDeathTimer); // Para o timer
+                    sendNotification('Boss Respawned!', `O boss ${bossName} ressuscitou!`);
+                }
+            }
+
+            // Atualiza as informações do boss na interface
+            function updateBossInfo() {
+                document.getElementById('bossName').innerText = bossName;
+                document.getElementById('bossStatus').innerText = bossStatus;
+                document.getElementById('bossTimeDead').innerText = bossStatus === "Morto" ? `${bossDeathTime} segundos` : '0 segundos';
             }
 
             // Login
@@ -316,6 +350,54 @@
             function resetEnemy() {
                 enemyHealth = 100;
                 updateStatus();
+            }
+
+            // Listar todos os jogadores cadastrados
+            function listAllPlayers() {
+                const playerList = document.getElementById('playerList');
+                playerList.innerHTML = ''; // Limpa a lista
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const playerData = JSON.parse(localStorage.getItem(key));
+                    playerList.innerHTML += `
+                        <li>
+                            ${playerData.nickname} - Nível: ${playerData.level} 
+                            <button onclick="editPlayer('${playerData.nickname}')">Editar</button>
+                            <button onclick="deletePlayer('${playerData.nickname}')">Excluir</button>
+                        </li>
+                    `;
+                }
+            }
+
+            // Editar jogador
+            function editPlayer(nickname) {
+                const newLevel = prompt("Novo nível para o jogador " + nickname + ":");
+                if (newLevel !== null) {
+                    const playerData = JSON.parse(localStorage.getItem(nickname));
+                    playerData.level = parseInt(newLevel);
+                    localStorage.setItem(nickname, JSON.stringify(playerData));
+                    alert("Dados do jogador " + nickname + " atualizados!");
+                    listAllPlayers(); // Atualiza a lista após editar
+                }
+            }
+
+            // Excluir jogador
+            function deletePlayer(nickname) {
+                if (confirm("Tem certeza que deseja excluir o jogador " + nickname + "?")) {
+                    localStorage.removeItem(nickname);
+                    alert("Jogador " + nickname + " excluído!");
+                    listAllPlayers(); // Atualiza a lista após excluir
+                }
+            }
+
+            // Gerenciar Jogadores com Autenticação
+            function managePlayers() {
+                const inputPassword = prompt("Digite a senha de administrador:");
+                if (inputPassword === adminPassword) {
+                    listAllPlayers(); // Acesso concedido, liste os jogadores
+                } else {
+                    alert("Senha incorreta! Você não tem permissão para acessar essa funcionalidade.");
+                }
             }
 
             // Atualizar Ranking
