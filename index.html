@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Redes Sociais - Jogo Melhorado</title>
+    <title>Minhas Redes Sociais - Jogo Melhorado versao teste 1.0  </title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <!-- Banner -->
     <div class="header">
         <img src="banner.jpg" alt="Banner">
     </div>
@@ -18,45 +17,26 @@
         <p>Escolha a rede social que deseja acessar:</p>
         
         <div class="links">
-            <a href="https://www.facebook.com/profile.php?id=100004529502599" target="_blank">
-                <i class="fab fa-facebook"></i> Facebook
-            </a>
-            <a href="https://www.youtube.com/@cadogames7229" target="_blank">
-                <i class="fab fa-youtube"></i> YouTube
-            </a>
-            <a href="https://www.tiktok.com/@cadosilvasc" target="_blank">
-                <i class="fab fa-tiktok"></i> TikTok
-            </a>
-            <a href="https://www.instagram.com/cado_silvasc/" target="_blank">
-                <i class="fab fa-instagram"></i> Instagram
-            </a>
-            <a href="https://www.twitch.tv/cadogamesof" target="_blank">
-                <i class="fab fa-twitch"></i> Twitch
-            </a>
-            <a href="https://kick.com/cadosilva" target="_blank">
-                <i class="fas fa-gamepad"></i> Kick
-            </a>
+            <!-- Links para redes sociais -->
         </div>
 
-        <!-- QR Code -->
         <div class="qr-code">
             <img src="whatsapp-qr.jpeg" alt="QR Code do WhatsApp">
             <p>Escaneie esse código para me adicionar no WhatsApp!</p>
         </div>
 
-        <!-- Login Interno -->
         <div class="login">
-            <h2>Login para continuar o progresso</h2>
+            <h2>Login ou Criação de Conta</h2>
             <label for="nickname">Nickname: </label>
             <input type="text" id="loginNickname" placeholder="Digite seu nickname">
             
             <label for="password">Senha: </label>
             <input type="password" id="loginPassword" placeholder="Digite sua senha">
             
-            <button onclick="login()">Login / Criar Conta</button>
+            <button onclick="login()">Login</button>
+            <button onclick="createAccount()">Criar Conta</button>
         </div>
 
-        <!-- Seleção de Classe -->
         <div class="start-game" style="display: none;">
             <h2>Escolha sua Classe</h2>
             <label for="class">Classe: </label>
@@ -68,7 +48,11 @@
             <button onclick="startGame()">Iniciar Jogo</button>
         </div>
 
-        <!-- Jogo Melhorado -->
+        <div class="ranking">
+            <h2>Ranking dos 5 Jogadores mais Fortes</h2>
+            <ul id="rankingList"></ul>
+        </div>
+
         <div class="game" style="display: none;">
             <h2 id="playerNameTitle"></h2>
             <div class="status">
@@ -87,7 +71,6 @@
             <button onclick="goToCity()">Ir para a Cidade</button>
         </div>
 
-        <!-- Loja na Cidade -->
         <div class="city" style="display: none;">
             <h2>Bem-vindo à Cidade</h2>
             <p>Você pode comprar itens para se fortalecer.</p>
@@ -113,7 +96,25 @@
             const MAX_LEVEL = 50;
             const MANA_COST = 20; // Mana necessária para usar habilidades especiais
 
-            // Login / Criar conta
+            // Solicitar permissão para notificações ao carregar o jogo
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+
+            // Função para enviar notificações
+            function sendNotification(title, message) {
+                if (Notification.permission === 'granted') {
+                    new Notification(title, { body: message });
+                }
+            }
+
+            // Respawn do boss
+            function respawnBoss() {
+                // Lógica para respawn do boss...
+                sendNotification('Boss Respawned!', 'Um novo boss apareceu. Prepare-se para enfrentá-lo!');
+            }
+
+            // Login
             function login() {
                 playerNickname = document.getElementById('loginNickname').value;
                 playerPassword = document.getElementById('loginPassword').value;
@@ -126,24 +127,41 @@
                 const savedData = localStorage.getItem(playerNickname);
 
                 if (savedData) {
-                    // Se os dados do jogador existirem, verificamos a senha para login
                     const data = JSON.parse(savedData);
                     if (data.password === playerPassword) {
                         currentPlayerData = data;
-                        loadPlayerData();  // Carrega os dados do jogador
+                        loadPlayerData();
                         document.querySelector('.login').style.display = 'none';
                         document.querySelector('.game').style.display = 'block';
                     } else {
                         alert('Senha incorreta!');
                     }
                 } else {
-                    // Se os dados não existirem, criamos uma nova conta
+                    alert("Conta não encontrada. Crie uma nova conta.");
+                }
+            }
+
+            // Criar Conta
+            function createAccount() {
+                playerNickname = document.getElementById('loginNickname').value;
+                playerPassword = document.getElementById('loginPassword').value;
+
+                if (!playerNickname || !playerPassword) {
+                    alert('Por favor, insira um nickname e senha para criar uma conta.');
+                    return;
+                }
+
+                const savedData = localStorage.getItem(playerNickname);
+
+                if (savedData) {
+                    alert('Conta já existe! Use outro nickname.');
+                } else {
                     currentPlayerData = {
                         nickname: playerNickname,
                         password: playerPassword,
                         level: 1,
                         xp: 0,
-                        gold: 50,  // Adicionando 50 de ouro inicial
+                        gold: 50,  // Ouro inicial
                         class: '',
                         health: 100,
                         mana: 100,
@@ -155,7 +173,7 @@
                 }
             }
 
-            // Iniciar o jogo (após selecionar a classe)
+            // Iniciar o jogo
             function startGame() {
                 playerClass = document.getElementById('class').value;
                 currentPlayerData.class = playerClass;
@@ -169,6 +187,7 @@
                 document.querySelector('.game').style.display = 'block';
 
                 updateStatus();
+                updateRanking();  // Atualiza o ranking
             }
 
             // Atualizar status
@@ -298,6 +317,30 @@
                 enemyHealth = 100;
                 updateStatus();
             }
+
+            // Atualizar Ranking
+            function updateRanking() {
+                const rankingData = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const playerData = JSON.parse(localStorage.getItem(key));
+                    rankingData.push(playerData);
+                }
+
+                // Ordenar os jogadores pelo nível
+                rankingData.sort((a, b) => b.level - a.level);
+
+                // Exibir os 5 melhores jogadores no ranking
+                const rankingList = document.getElementById('rankingList');
+                rankingList.innerHTML = '';
+                for (let i = 0; i < Math.min(5, rankingData.length); i++) {
+                    const player = rankingData[i];
+                    rankingList.innerHTML += `<li>${player.nickname} - Nível: ${player.level}</li>`;
+                }
+            }
+
+            // Atualiza o ranking ao carregar o jogo
+            window.onload = updateRanking;
         </script>
     </body>
 </html>
