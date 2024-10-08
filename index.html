@@ -15,7 +15,7 @@
 
     <div class="container">
         <h1>Bem-vindo às minhas redes sociais!</h1>
-        <p>Escolha a rede social  que deseja acessar:</p>
+        <p>Escolha a rede social que deseja acessar:</p>
         
         <div class="links">
             <a href="https://www.facebook.com/profile.php?id=100004529502599" target="_blank">
@@ -43,6 +43,24 @@
             <img src="whatsapp-qr.jpeg" alt="QR Code do WhatsApp">
             <p>Escaneie esse código para me adicionar no WhatsApp!</p>
         </div>
+
+        <!-- Jogo Simples -->
+        <div class="game">
+            <h2>Encontre o inimigo! O que você vai fazer?</h2>
+            <p id="gameMessage">Você encontrou um inimigo! Escolha uma ação:</p>
+            <button onclick="attack()">Atacar</button>
+            <button onclick="run()">Fugir</button>
+        </div>
     </div>
+
+    <script>
+        function attack() {
+            document.getElementById('gameMessage').innerText = "Você atacou o inimigo e venceu a batalha!";
+        }
+
+        function run() {
+            document.getElementById('gameMessage').innerText = "Você fugiu do inimigo e escapou com segurança!";
+        }
+    </script>
 </body>
 </html>
