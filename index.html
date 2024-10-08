@@ -67,6 +67,7 @@
             <p>Nome: <span id="bossName">Lord Orc</span></p>
             <p>Status: <span id="bossStatus">Vivo</span></p>
             <p>Tempo Morto: <span id="bossTimeDead">0 segundos</span></p>
+            <button onclick="respawnSecondaryBoss()">Renascer Boss Secundário</button>
         </div>
 
         <div class="game" style="display: none;">
@@ -93,6 +94,7 @@
             <button onclick="buyItem('poção')">Comprar Poção de Cura (20 Ouro)</button>
             <button onclick="buyItem('espada')">Comprar Espada Melhorada (50 Ouro)</button>
             <button onclick="buyItem('mana')">Comprar Poção de Mana (20 Ouro)</button>
+            <button onclick="buyItem('itemClasse')">Comprar Item da Classe (50 Ouro)</button>
             <button onclick="leaveCity()">Sair da Cidade</button>
         </div>
 
@@ -138,6 +140,18 @@
                     bossDeathTime = 0; // Reseta o tempo de morte
                     clearInterval(bossDeathTimer); // Para o timer
                     sendNotification('Boss Respawned!', `O boss ${bossName} ressuscitou!`);
+                    updateBossInfo(); // Atualiza a interface
+                }
+            }
+
+            // Função para renascer o boss secundário
+            function respawnSecondaryBoss() {
+                const inputPassword = prompt("Digite a senha de administrador:");
+                if (inputPassword === adminPassword) {
+                    respawnBoss(); // Renasce o boss
+                    alert(`O boss ${bossName} foi renascido para o evento!`);
+                } else {
+                    alert("Senha incorreta! Você não tem permissão para renascer o boss.");
                 }
             }
 
@@ -334,6 +348,13 @@
                     currentPlayerData.gold -= 20;
                     currentPlayerData.inventory.push("Poção de Mana");
                     document.getElementById('gameMessage').innerText = "Você comprou uma Poção de Mana!";
+                } else if (item === 'itemClasse') {
+                    const itemClass = currentPlayerData.class === 'guerreiro' ? "Machado de Guerra" : 
+                                      currentPlayerData.class === 'mago' ? "Cajado Mágico" : 
+                                      "Arco Longo";
+                    currentPlayerData.gold -= 50;
+                    currentPlayerData.inventory.push(itemClass);
+                    document.getElementById('gameMessage').innerText = `Você comprou um ${itemClass}!`;
                 } else {
                     document.getElementById('gameMessage').innerText = "Ouro insuficiente!";
                 }
@@ -348,7 +369,7 @@
 
             // Resetar inimigo
             function resetEnemy() {
-                enemyHealth = 100;
+                enemyHealth = Math.floor(Math.random() * (playerLevel + 1) + playerLevel); // Inimigo aleatório
                 updateStatus();
             }
 
@@ -371,22 +392,32 @@
 
             // Editar jogador
             function editPlayer(nickname) {
-                const newLevel = prompt("Novo nível para o jogador " + nickname + ":");
-                if (newLevel !== null) {
-                    const playerData = JSON.parse(localStorage.getItem(nickname));
-                    playerData.level = parseInt(newLevel);
-                    localStorage.setItem(nickname, JSON.stringify(playerData));
-                    alert("Dados do jogador " + nickname + " atualizados!");
-                    listAllPlayers(); // Atualiza a lista após editar
+                const inputPassword = prompt("Digite a senha de administrador:");
+                if (inputPassword === adminPassword) {
+                    const newLevel = prompt("Novo nível para o jogador " + nickname + ":");
+                    if (newLevel !== null) {
+                        const playerData = JSON.parse(localStorage.getItem(nickname));
+                        playerData.level = parseInt(newLevel);
+                        localStorage.setItem(nickname, JSON.stringify(playerData));
+                        alert("Dados do jogador " + nickname + " atualizados!");
+                        listAllPlayers(); // Atualiza a lista após editar
+                    }
+                } else {
+                    alert("Senha incorreta! Você não tem permissão para editar.");
                 }
             }
 
             // Excluir jogador
             function deletePlayer(nickname) {
-                if (confirm("Tem certeza que deseja excluir o jogador " + nickname + "?")) {
-                    localStorage.removeItem(nickname);
-                    alert("Jogador " + nickname + " excluído!");
-                    listAllPlayers(); // Atualiza a lista após excluir
+                const inputPassword = prompt("Digite a senha de administrador:");
+                if (inputPassword === adminPassword) {
+                    if (confirm("Tem certeza que deseja excluir o jogador " + nickname + "?")) {
+                        localStorage.removeItem(nickname);
+                        alert("Jogador " + nickname + " excluído!");
+                        listAllPlayers(); // Atualiza a lista após excluir
+                    }
+                } else {
+                    alert("Senha incorreta! Você não tem permissão para excluir.");
                 }
             }
 
