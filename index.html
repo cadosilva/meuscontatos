@@ -80,6 +80,7 @@
             <h2 id="playerNameTitle"></h2>
             <div class="status">
                 <p><strong>Classe: <span id="playerClass"></span></strong></p>
+                <p><strong>Nível: <span id="playerLevel">1</span></strong></p>
                 <p><strong>Vida:</strong> <span id="playerHealth">100</span> | Mana: <span id="playerMana">100</span> | XP: <span id="playerXP">0</span> | Ouro: <span id="playerGold">0</span></p>
                 <p><strong>Inimigo</strong> - Nome: <span id="enemyName">Nome do Inimigo</span> | Vida: <span id="enemyHealth">100</span></p>
             </div>
@@ -98,6 +99,8 @@
         <div class="city" style="display: none;">
             <h2>Bem-vindo à Cidade</h2>
             <p>Você pode comprar itens para se fortalecer.</p>
+            <p><strong>Ouro: <span id="cityPlayerGold">0</span></strong></p>
+            <p><strong>Inventário: <span id="cityInventory">Nada</span></strong></p>
             <button onclick="buyItem('poção')">Comprar Poção de Cura (20 Ouro)</button>
             <button onclick="buyItem('espada')">Comprar Espada Melhorada (50 Ouro)</button>
             <button onclick="buyItem('mana')">Comprar Poção de Mana (20 Ouro)</button>
@@ -317,6 +320,9 @@
                 document.getElementById('enemyHealth').innerText = enemyHealth;
                 document.getElementById('enemyName').innerText = enemyName; // Atualiza o nome do inimigo
                 document.getElementById('inventory').innerText = currentPlayerData.inventory.length > 0 ? currentPlayerData.inventory.join(', ') : 'Nada';
+                document.getElementById('cityPlayerGold').innerText = currentPlayerData.gold; // Atualiza o ouro na loja
+                document.getElementById('cityInventory').innerText = currentPlayerData.inventory.length > 0 ? currentPlayerData.inventory.join(', ') : 'Nada'; // Atualiza o inventário na loja
+                document.getElementById('playerLevel').innerText = currentPlayerData.level; // Atualiza o nível do jogador
                 savePlayerData();  // Salvar dados após cada atualização
             }
 
@@ -397,26 +403,26 @@
 
             // Usar Mana
             function useMana() {
-                if (currentPlayerData.mana < 100) {
-                    currentPlayerData.mana += 30; // Restaura 30 de mana
-                    document.getElementById('gameMessage').innerText = "Você usou mana e recuperou 30 de mana!";
+                const manaIndex = currentPlayerData.inventory.indexOf("Poção de Mana");
+                if (manaIndex > -1) {
+                    currentPlayerData.mana = Math.min(currentPlayerData.mana + 30, 100); // Restaura até 100 de mana
+                    currentPlayerData.inventory.splice(manaIndex, 1); // Remove a poção do inventário
+                    document.getElementById('gameMessage').innerText = "Você usou uma Poção de Mana e recuperou 30 de mana!";
                 } else {
-                    document.getElementById('gameMessage').innerText = "Mana já está cheia!";
+                    document.getElementById('gameMessage').innerText = "Você não tem Poção de Mana no inventário!";
                 }
                 updateStatus();
             }
 
             // Ganhar XP
             function gainXP(amount) {
-                if (playerLevel < MAX_LEVEL) {
-                    currentPlayerData.xp += amount;
-                    if (currentPlayerData.xp >= playerLevel * 100) {
-                        currentPlayerData.xp = 0;
-                        currentPlayerData.level++;
-                        currentPlayerData.health = 100; // Restaura vida ao subir de nível
-                        currentPlayerData.mana = 100;   // Restaura mana ao subir de nível
-                        document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${playerLevel}!`;
-                    }
+                currentPlayerData.xp += amount;
+                if (currentPlayerData.xp >= (currentPlayerData.level * 100) + (50 * (currentPlayerData.level - 1))) { // Aumenta a XP necessária para o próximo nível
+                    currentPlayerData.xp = 0;
+                    currentPlayerData.level++;
+                    currentPlayerData.health = 100; // Restaura vida ao subir de nível
+                    currentPlayerData.mana = 100;   // Restaura mana ao subir de nível
+                    document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${currentPlayerData.level}!`;
                 }
                 updateStatus();
             }
@@ -432,31 +438,35 @@
             function goToCity() {
                 document.querySelector('.game').style.display = 'none';
                 document.querySelector('.city').style.display = 'block';
+                updateStatus(); // Atualiza o status antes de ir para a cidade
             }
 
             // Comprar itens na cidade
             function buyItem(item) {
+                let itemName = "";
                 if (item === 'poção' && currentPlayerData.gold >= 20) {
                     currentPlayerData.gold -= 20;
                     currentPlayerData.inventory.push("Poção de Cura");
-                    document.getElementById('gameMessage').innerText = "Você comprou uma Poção de Cura!";
+                    itemName = "Poção de Cura";
                 } else if (item === 'espada' && currentPlayerData.gold >= 50) {
                     currentPlayerData.gold -= 50;
-                    document.getElementById('gameMessage').innerText = "Você comprou uma Espada Melhorada!";
+                    itemName = "Espada Melhorada";
                 } else if (item === 'mana' && currentPlayerData.gold >= 20) {
                     currentPlayerData.gold -= 20;
                     currentPlayerData.inventory.push("Poção de Mana");
-                    document.getElementById('gameMessage').innerText = "Você comprou uma Poção de Mana!";
+                    itemName = "Poção de Mana";
                 } else if (item === 'itemClasse') {
                     const itemClass = currentPlayerData.class === 'guerreiro' ? "Machado de Guerra" : 
                                       currentPlayerData.class === 'mago' ? "Cajado Mágico" : 
                                       "Arco Longo";
                     currentPlayerData.gold -= 50;
                     currentPlayerData.inventory.push(itemClass);
-                    document.getElementById('gameMessage').innerText = `Você comprou um ${itemClass}!`;
+                    itemName = itemClass;
                 } else {
                     document.getElementById('gameMessage').innerText = "Ouro insuficiente!";
+                    return; // Para a função se não houver ouro suficiente
                 }
+                document.getElementById('gameMessage').innerText = `Você comprou uma ${itemName}!`;
                 updateStatus();
             }
 
