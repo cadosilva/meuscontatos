@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Redes Sociais</title>
+    <title>Minhas Redes Sociais - Jogo Melhorado</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
@@ -44,23 +44,243 @@
             <p>Escaneie esse código para me adicionar no WhatsApp!</p>
         </div>
 
-        <!-- Jogo Simples -->
-        <div class="game">
-            <h2>Encontre o inimigo! O que você vai fazer?</h2>
+        <!-- Último vencedor do Chefe -->
+        <div class="boss-winner">
+            <h3>Último jogador a derrotar o Chefe Final: <span id="lastWinner">Ninguém</span></h3>
+        </div>
+
+        <!-- Seleção de Nickname e Classe -->
+        <div class="start-game">
+            <h2>Escolha seu Nickname e Classe</h2>
+            <label for="nickname">Nickname: </label>
+            <input type="text" id="nickname" placeholder="Digite seu nickname">
+            
+            <label for="class">Classe: </label>
+            <select id="class">
+                <option value="guerreiro">Guerreiro</option>
+                <option value="mago">Mago</option>
+                <option value="arqueiro">Arqueiro</option>
+            </select>
+            
+            <button onclick="startGame()">Iniciar Jogo</button>
+        </div>
+
+        <!-- Jogo Melhorado -->
+        <div class="game" style="display: none;">
+            <h2 id="playerNameTitle"></h2>
+            <div class="status">
+                <p><strong>Classe: <span id="playerClass"></span></strong></p>
+                <p><strong>Vida:</strong> <span id="playerHealth">100</span> | XP: <span id="playerXP">0</span> | Ouro: <span id="playerGold">0</span></p>
+                <p><strong>Inimigo</strong> - Vida: <span id="enemyHealth">100</span></p>
+            </div>
+            <div class="inventory">
+                <p>Inventário: <span id="inventory">Nada</span></p>
+            </div>
             <p id="gameMessage">Você encontrou um inimigo! Escolha uma ação:</p>
             <button onclick="attack()">Atacar</button>
+            <button onclick="useAbility()">Usar Habilidade</button>
+            <button onclick="defend()">Defender</button>
             <button onclick="run()">Fugir</button>
         </div>
-    </div>
 
-    <script>
-        function attack() {
-            document.getElementById('gameMessage').innerText = "Você atacou o inimigo e venceu a batalha!";
-        }
+        <!-- Imagem do Chefe Final -->
+        <div class="boss-image" style="display: none;">
+            <h2>Lord Orc</h2>
+            <img id="bossImage" src="lord-orc.jpg" alt="Lord Orc" style="width: 300px; height: auto;">
+        </div>
 
-        function run() {
-            document.getElementById('gameMessage').innerText = "Você fugiu do inimigo e escapou com segurança!";
-        }
-    </script>
-</body>
+        <!-- Exploração do Mapa -->
+        <div class="map" style="display: none;">
+            <h2>Exploração do Mapa</h2>
+            <button onclick="goToArea('Floresta')">Ir para a Floresta</button>
+            <button onclick="goToArea('Montanha')">Ir para a Montanha</button>
+            <button onclick="goToArea('Deserto')">Ir para o Deserto</button>
+            <button onclick="fightBoss()">Enfrentar o Chefe Final (Lord Orc)</button>
+        </div>
+
+        <script>
+            let playerHealth = 100;
+            let enemyHealth = 100;
+            let playerXP = 0;
+            let playerGold = 0;
+            let playerLevel = 1;
+            let inventory = [];
+            let playerClass = '';
+            let playerNickname = '';
+            let bossDefeated = false;
+            let lastBossDefeatTime = null;
+            let lastWinner = "Ninguém";
+
+            const MAX_LEVEL = 50;
+            const BOSS_REVIVE_TIME = 3600000; // 1 hora em milissegundos
+            const BOSS_LEVEL = 20;
+
+            function startGame() {
+                playerNickname = document.getElementById('nickname').value;
+                playerClass = document.getElementById('class').value;
+
+                if (!playerNickname) {
+                    alert('Por favor, digite um nickname.');
+                    return;
+                }
+
+                // Inicializar os atributos de acordo com a classe
+                if (playerClass === 'guerreiro') {
+                    playerHealth = 120;
+                    playerGold = 10;
+                } else if (playerClass === 'mago') {
+                    playerHealth = 80;
+                    playerGold = 15;
+                } else if (playerClass === 'arqueiro') {
+                    playerHealth = 100;
+                    playerGold = 12;
+                }
+
+                // Exibir nome e classe do jogador
+                document.getElementById('playerNameTitle').innerText = `Jogador: ${playerNickname}`;
+                document.getElementById('playerClass').innerText = playerClass;
+
+                // Esconder a tela de seleção de nickname e mostrar o jogo
+                document.querySelector('.start-game').style.display = 'none';
+                document.querySelector('.game').style.display = 'block';
+
+                updateStatus();
+            }
+
+            function updateStatus() {
+                document.getElementById('playerHealth').innerText = playerHealth > 0 ? playerHealth : 0;
+                document.getElementById('enemyHealth').innerText = enemyHealth > 0 ? enemyHealth : 0;
+                document.getElementById('playerXP').innerText = playerXP;
+                document.getElementById('playerGold').innerText = playerGold;
+                document.getElementById('inventory').innerText = inventory.length > 0 ? inventory.join(', ') : 'Nada';
+                document.getElementById('lastWinner').innerText = lastWinner;
+            }
+
+            function attack() {
+                const playerDamage = Math.floor(Math.random() * 20) + 1;
+                const enemyDamage = Math.floor(Math.random() * 15) + 1;
+
+                enemyHealth -= playerDamage;
+                playerHealth -= enemyDamage;
+
+                if (enemyHealth <= 0) {
+                    gainXP(50);
+                    playerGold += 20;
+                    inventory.push("Poção de Cura");
+                    document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Você ganhou 50 XP, 20 de ouro e uma Poção de Cura.";
+                    disableButtons();
+                    showMap();
+                } else if (playerHealth <= 0) {
+                    document.getElementById('gameMessage').innerText = "Você foi derrotado! Fim de jogo.";
+                    disableButtons();
+                } else {
+                    document.getElementById('gameMessage').innerText = `Você causou ${playerDamage} de dano! O inimigo causou ${enemyDamage} de dano em você!`;
+                }
+
+                updateStatus();
+            }
+
+            function gainXP(amount) {
+                if (playerLevel < MAX_LEVEL) {
+                    playerXP += amount;
+                    if (playerXP >= playerLevel * 100) {
+                        playerXP = 0;
+                        playerLevel++;
+                        document.getElementById('gameMessage').innerText += ` Parabéns, você subiu para o nível ${playerLevel}!`;
+                    }
+                }
+            }
+
+            function useAbility() {
+                if (playerClass === 'guerreiro') {
+                    const fierceAttack = Math.floor(Math.random() * 40) + 20;
+                    enemyHealth -= fierceAttack;
+                    document.getElementById('gameMessage').innerText = `Você usou Ataque Feroz e causou ${fierceAttack} de dano!`;
+                } else if (playerClass === 'mago') {
+                    const fireball = Math.floor(Math.random() * 35) + 15;
+                    enemyHealth -= fireball;
+                    document.getElementById('gameMessage').innerText = `Você lançou Bola de Fogo e causou ${fireball} de dano!`;
+                } else if (playerClass === 'arqueiro') {
+                    const preciseShot = Math.floor(Math.random() * 30) + 10;
+                    const critical = Math.random() > 0.7;
+                    if (critical) {
+                        enemyHealth -= preciseShot * 2;
+                        document.getElementById('gameMessage').innerText = `Tiro Preciso Crítico! Você causou ${preciseShot * 2} de dano!`;
+                    } else {
+                        enemyHealth -= preciseShot;
+                        document.getElementById('gameMessage').innerText = `Você usou Tiro Preciso e causou ${preciseShot} de dano!`;
+                    }
+                }
+
+                updateStatus();
+                if (enemyHealth <= 0) {
+                    gainXP(50);
+                    playerGold += 20;
+                    inventory.push("Poção de Cura");
+                    document.getElementById('gameMessage').innerText = "Você derrotou o inimigo! Você ganhou 50 XP, 20 de ouro e uma Poção de Cura.";
+                    disableButtons();
+                    showMap();
+                }
+            }
+
+            function defend() {
+                const enemyDamage = Math.floor(Math.random() * 15) + 1;
+                playerHealth -= Math.floor(enemyDamage / 2);
+
+                document.getElementById('gameMessage').innerText = "Você se defendeu! O inimigo causou menos dano.";
+                updateStatus();
+            }
+
+            function run() {
+                document.getElementById('gameMessage').innerText = "Você fugiu do inimigo e escapou com segurança!";
+                disableButtons();
+            }
+
+            function showMap() {
+                document.querySelector('.game').style.display = 'none';
+                document.querySelector('.map').style.display = 'block';
+            }
+
+            function goToArea(area) {
+                document.getElementById('gameMessage').innerText = `Você foi para ${area}. Enfrente o próximo inimigo!`;
+                document.querySelector('.map').style.display = 'none';
+                document.querySelector('.game').style.display = 'block';
+                resetEnemy();
+            }
+
+            function fightBoss() {
+                if (bossDefeated && Date.now() - lastBossDefeatTime < BOSS_REVIVE_TIME) {
+                    const timeLeft = Math.ceil((BOSS_REVIVE_TIME - (Date.now() - lastBossDefeatTime)) / 60000);
+                    document.getElementById('gameMessage').innerText = `O Lord Orc revive em ${timeLeft} minutos. Tente novamente mais tarde.`;
+                    return;
+                }
+
+                document.getElementById('gameMessage').innerText = "Você encontrou o Lord Orc! Prepare-se para a batalha!";
+                document.querySelector('.boss-image').style.display = 'block'; // Mostra a imagem do chefe
+                enemyHealth = 200;
+                bossDefeated = false;
+                document.querySelector('.map').style.display = 'none';
+                document.querySelector('.game').style.display = 'block';
+                updateStatus();
+            }
+
+            function resetEnemy() {
+                enemyHealth = 100;
+                updateStatus();
+            }
+
+            function disableButtons() {
+                document.querySelectorAll('button').forEach(button => button.disabled = true);
+            }
+
+            function defeatBoss() {
+                lastWinner = playerNickname;
+                lastBossDefeatTime = Date.now();
+                bossDefeated = true;
+                document.getElementById('gameMessage').innerText = "Você derrotou o Lord Orc! Ele reviverá em 1 hora.";
+                document.querySelector('.boss-image').style.display = 'none'; // Esconde a imagem do chefe
+                updateStatus();
+            }
+        </script>
+    </body>
 </html>
