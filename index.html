@@ -43,6 +43,17 @@
             <button onclick="startGame()">Iniciar Jogo</button>
         </div>
 
+        <div class="map-selection" style="display: none;">
+            <h2>Escolha um Mapa</h2>
+            <select id="map">
+                <option value="floresta">Floresta (Níveis 1 a 10)</option>
+                <option value="deserto">Deserto (Níveis 20 a 30)</option>
+                <option value="continenteGelo">Continente de Gelo (Níveis 30 a 40)</option>
+                <option value="ilhaLava">Ilha de Lava (Níveis 50 a 60)</option>
+            </select>
+            <button onclick="startAdventure()">Explorar Mapa</button>
+        </div>
+
         <div class="ranking">
             <h2>Ranking dos 5 Jogadores mais Fortes</h2>
             <ul id="rankingList"></ul>
@@ -70,7 +81,7 @@
             <div class="status">
                 <p><strong>Classe: <span id="playerClass"></span></strong></p>
                 <p><strong>Vida:</strong> <span id="playerHealth">100</span> | Mana: <span id="playerMana">100</span> | XP: <span id="playerXP">0</span> | Ouro: <span id="playerGold">0</span></p>
-                <p><strong>Inimigo</strong> - Vida: <span id="enemyHealth">100</span></p>
+                <p><strong>Inimigo</strong> - Nome: <span id="enemyName">Nome do Inimigo</span> | Vida: <span id="enemyHealth">100</span></p>
             </div>
             <div class="inventory">
                 <p>Inventário: <span id="inventory">Nada</span></p>
@@ -105,6 +116,9 @@
             let playerNickname = '';
             let playerPassword = '';
             let currentPlayerData = null;
+            let currentMap = '';
+            let enemyLevel = 0;
+            let enemyName = '';
 
             const MAX_LEVEL = 50;
             const MANA_COST = 20; // Mana necessária para usar habilidades especiais
@@ -175,7 +189,7 @@
                         currentPlayerData = data;
                         loadPlayerData();
                         document.querySelector('.login').style.display = 'none';
-                        document.querySelector('.game').style.display = 'block';
+                        document.querySelector('.map-selection').style.display = 'block'; // Mostra a seleção de mapa
                     } else {
                         alert('Senha incorreta!');
                     }
@@ -227,10 +241,70 @@
                 document.getElementById('playerNameTitle').innerText = `Jogador: ${playerNickname}`;
                 document.getElementById('playerClass').innerText = playerClass;
                 document.querySelector('.start-game').style.display = 'none';
-                document.querySelector('.game').style.display = 'block';
+                document.querySelector('.map-selection').style.display = 'block'; // Mostra a seleção de mapa
+            }
 
-                updateStatus();
-                updateRanking();  // Atualiza o ranking
+            // Começar a aventura no mapa escolhido
+            function startAdventure() {
+                currentMap = document.getElementById('map').value;
+                if (!canAccessMap(currentMap)) {
+                    alert('Você não pode acessar este mapa devido ao seu nível.');
+                    return;
+                }
+                enemyLevel = getEnemyLevel(currentMap); // Define o nível do inimigo com base no mapa
+                enemyName = getEnemyName(currentMap); // Obtém o nome do inimigo
+                resetEnemy(); // Reinicia o inimigo
+                document.querySelector('.map-selection').style.display = 'none';
+                document.querySelector('.game').style.display = 'block'; // Mostra o jogo
+                updateStatus(); // Atualiza o status do jogador
+            }
+
+            // Verifica se o jogador pode acessar o mapa com base em seu nível
+            function canAccessMap(map) {
+                switch (map) {
+                    case 'floresta':
+                        return playerLevel >= 1 && playerLevel <= 10;
+                    case 'deserto':
+                        return playerLevel >= 20 && playerLevel <= 30;
+                    case 'continenteGelo':
+                        return playerLevel >= 30 && playerLevel <= 40;
+                    case 'ilhaLava':
+                        return playerLevel >= 50 && playerLevel <= 60;
+                    default:
+                        return false; // Mapa inválido
+                }
+            }
+
+            // Obtém o nível do inimigo com base no mapa selecionado
+            function getEnemyLevel(map) {
+                switch (map) {
+                    case 'floresta':
+                        return Math.floor(Math.random() * 10) + 1; // Níveis 1 a 10
+                    case 'deserto':
+                        return Math.floor(Math.random() * 11) + 20; // Níveis 20 a 30
+                    case 'continenteGelo':
+                        return Math.floor(Math.random() * 11) + 30; // Níveis 30 a 40
+                    case 'ilhaLava':
+                        return Math.floor(Math.random() * 11) + 50; // Níveis 50 a 60
+                    default:
+                        return 1; // Nível padrão
+                }
+            }
+
+            // Obtém o nome do inimigo com base no mapa selecionado
+            function getEnemyName(map) {
+                switch (map) {
+                    case 'floresta':
+                        return "Lobo Selvagem";
+                    case 'deserto':
+                        return "Escorpião Gigante";
+                    case 'continenteGelo':
+                        return "Yeti Furioso";
+                    case 'ilhaLava':
+                        return "Dragão de Lava";
+                    default:
+                        return "Inimigo Desconhecido"; // Nome padrão
+                }
             }
 
             // Atualizar status
@@ -239,6 +313,8 @@
                 document.getElementById('playerMana').innerText = currentPlayerData.mana;
                 document.getElementById('playerXP').innerText = currentPlayerData.xp;
                 document.getElementById('playerGold').innerText = currentPlayerData.gold;
+                document.getElementById('enemyHealth').innerText = enemyHealth;
+                document.getElementById('enemyName').innerText = enemyName; // Atualiza o nome do inimigo
                 document.getElementById('inventory').innerText = currentPlayerData.inventory.length > 0 ? currentPlayerData.inventory.join(', ') : 'Nada';
                 savePlayerData();  // Salvar dados após cada atualização
             }
@@ -367,7 +443,8 @@
 
             // Resetar inimigo
             function resetEnemy() {
-                enemyHealth = Math.floor(Math.random() * (playerLevel + 1) + playerLevel); // Inimigo aleatório
+                enemyHealth = Math.floor(Math.random() * (enemyLevel + 1) + enemyLevel); // Inimigo aleatório
+                document.getElementById('enemyName').innerText = getEnemyName(currentMap); // Atualiza o nome do inimigo
                 updateStatus();
             }
 
